@@ -69,8 +69,8 @@ fun TestCanvas(modifier: Modifier = Modifier) {
     var canvasWidth by remember { mutableFloatStateOf(0f) }
     var canvasHeight by remember { mutableFloatStateOf(0f) }
 
-    var minionsX by remember { mutableFloatStateOf(0f) }
-    var minionsY by remember { mutableFloatStateOf(0f) }
+    var minionsX by remember { mutableFloatStateOf(200f) }
+    var minionsY by remember { mutableFloatStateOf(800f) }
 
     var gameOver by remember { mutableStateOf(false) }
 
@@ -78,11 +78,24 @@ fun TestCanvas(modifier: Modifier = Modifier) {
     val minionsImage: ImageBitmap =
         ImageBitmap.imageResource(id = R.drawable.minions)
 
-    LaunchedEffect(Unit) {
-        while (!gameOver) {
-            delay(1000L) //0.1 秒
-            minionsX += 5
-            minionsY += 10
+    LaunchedEffect(gameOver, canvasWidth, canvasHeight) {
+        // 當遊戲未結束，且畫布取得寬高時，執行移動邏輯
+        if (!gameOver && canvasWidth > 0f && canvasHeight > 0f) {
+            // 計算每次移動的距離 (讓它朝向右下角移動)
+            val dx = (canvasWidth - 200f) / 100f
+            val dy = (canvasHeight - 800f) / 100f
+            
+            while (true) {
+                delay(50L) // 0.05 秒，讓動畫更順暢
+                minionsX += dx
+                minionsY += dy
+                
+                // 如果超出畫布，讓它回到起點
+                if (minionsX > canvasWidth || minionsY > canvasHeight) {
+                    minionsX = 200f
+                    minionsY = 800f
+                }
+            }
         }
     }
 
@@ -134,12 +147,8 @@ fun TestCanvas(modifier: Modifier = Modifier) {
             val minionsWidth = minionsImage.width
             val minionsHeight = minionsImage.height
 
-            // 置中公式：(畫布寬高 - 圖片寬高) / 2f
-            val minionsX = (size.width - minionsWidth) / 2f
-            val minionsY = (size.height - minionsHeight) / 2f
-
-            // 將畫布起點移至置中位置後畫圖
-            translate(minionsX, minionsY) {
+            // 將畫布起點移至狀態裡的 minionsX, minionsY (並將圖片中心對齊)
+            translate(minionsX - minionsWidth / 2f, minionsY - minionsHeight / 2f) {
                 drawImage(minionsImage)
             }
 
